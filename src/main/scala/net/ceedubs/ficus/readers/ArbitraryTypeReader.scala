@@ -8,7 +8,12 @@ import macrocompat.bundle
 import scala.reflect.macros.blackbox
 
 trait ArbitraryTypeReader {
-  implicit def arbitraryTypeValueReader[T]: ValueReader[T] = macro ArbitraryTypeReaderMacros.arbitraryTypeValueReader[T]
+
+  implicit def parentValueReaderEvidence[T]: ParentValueReader[T] =
+    macro ArbitraryTypeReaderMacros.parentValueReader[T]
+
+  implicit def arbitraryTypeValueReader[T]: ValueReader[T] =
+    macro ArbitraryTypeReaderMacros.arbitraryTypeValueReader[T]
 }
 
 /**
@@ -18,6 +23,7 @@ object NameMapper {
 
   /**
     * Gets the name mapper from the implicit scope
+    *
     * @param nameMapper The name mapper from the implicit scope, or the default name mapper if not found
     * @return The name mapper to be used in current implicit scope
     */
@@ -33,6 +39,7 @@ trait NameMapper {
 
   /**
     * Maps between the name in the code to name in configuration
+    *
     * @param name The name as found in the code
     */
   def map(name: String): String
@@ -52,9 +59,18 @@ object ArbitraryTypeReader extends ArbitraryTypeReader
 
 @bundle
 class ArbitraryTypeReaderMacros(val c: blackbox.Context) extends ReflectionUtils {
+
   import c.universe._
 
-  def arbitraryTypeValueReader[T : c.WeakTypeTag]: c.Expr[ValueReader[T]] = {
+  def parentValueReader[T: c.WeakTypeTag]: c.Expr[ParentValueReader[T]] = {
+    arbitraryTypeValueReader
+
+    reify {
+      new ParentValueReader[T] {}
+    }
+  }
+
+  def arbitraryTypeValueReader[T: c.WeakTypeTag]: c.Expr[ValueReader[T]] = {
     reify {
       new ValueReader[T] {
         def read(config: Config, path: String): T = instantiateFromConfig[T](
@@ -65,7 +81,7 @@ class ArbitraryTypeReaderMacros(val c: blackbox.Context) extends ReflectionUtils
     }
   }
 
-  def instantiateFromConfig[T : c.WeakTypeTag](config: c.Expr[Config], path: c.Expr[String], mapper: c.Expr[NameMapper]): c.Expr[T] = {
+  def instantiateFromConfig[T: c.WeakTypeTag](config: c.Expr[Config], path: c.Expr[String], mapper: c.Expr[NameMapper]): c.Expr[T] = {
     val returnType = c.weakTypeOf[T]
 
     def fail(reason: String) = c.abort(c.enclosingPosition, s"Cannot generate a config value reader for type $returnType, because $reason")
@@ -88,9 +104,9 @@ class ArbitraryTypeReaderMacros(val c: blackbox.Context) extends ReflectionUtils
     c.Expr[T](Apply(instantiationCall, instantiationArgs))
   }
 
-  def extractMethodArgsFromConfig[T : c.WeakTypeTag](method: c.universe.MethodSymbol, companionObjectMaybe: Option[c.Symbol],
-                                              config: c.Expr[Config], path: c.Expr[String], mapper: c.Expr[NameMapper],
-                                              fail: String => Nothing): List[c.Tree] = {
+  def extractMethodArgsFromConfig[T: c.WeakTypeTag](method: c.universe.MethodSymbol, companionObjectMaybe: Option[c.Symbol],
+                                                    config: c.Expr[Config], path: c.Expr[String], mapper: c.Expr[NameMapper],
+                                                    fail: String => Nothing): List[c.Tree] = {
     val decodedMethodName = method.name.decodedName.toString
 
     if (!method.isPublic) fail(s"'$decodedMethodName' method is not public")

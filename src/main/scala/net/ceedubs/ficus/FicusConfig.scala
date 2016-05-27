@@ -1,11 +1,15 @@
 package net.ceedubs.ficus
 
 import com.typesafe.config.Config
-import net.ceedubs.ficus.readers.{AllValueReaderInstances, ValueReader}
+import net.ceedubs.ficus.readers.{AllValueReaderInstances, ParentValueReader, ValueReader}
+
 import scala.language.implicitConversions
 
 trait FicusConfig {
+
   def config: Config
+
+  def as[A]()(implicit parentReader: ParentValueReader[A], reader: ValueReader[A]): A = parentReader.read(config)
 
   def as[A](path: String)(implicit reader: ValueReader[A]): A = reader.read(config, path)
 
@@ -22,5 +26,7 @@ final case class SimpleFicusConfig(config: Config) extends FicusConfig
   "For implicits, use Ficus._ instead of FicusConfig._. Separately use ArbitraryTypeReader._ for macro-based derived reader instances. See https://github.com/ceedubs/ficus/issues/5",
   since = "1.0.1/1.1.1")
 object FicusConfig extends AllValueReaderInstances {
+  private val dummyKey = "key"
+
   implicit def toFicusConfig(config: Config): FicusConfig = SimpleFicusConfig(config)
 }

@@ -57,6 +57,11 @@ class ExampleSpec extends Specification {
       analyticsConfig.maxConnections must beEqualTo(25)
       // since this value isn't in the config, it will fall back to the default for the case class
       analyticsConfig.httpsRequired must beFalse
+
+      // Another way to read some values, If you have the only the config element that maps to that object
+      val anotherAnalyticsConfig = config.getConfig("services.analytics").as[ServiceConfig]()
+
+      anotherAnalyticsConfig must beEqualTo(analyticsConfig)
     }
 
     "Be easily extensible" in {
