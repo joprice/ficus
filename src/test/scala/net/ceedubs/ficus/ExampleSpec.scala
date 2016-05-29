@@ -59,7 +59,7 @@ class ExampleSpec extends Specification {
       analyticsConfig.httpsRequired must beFalse
 
       // Another way to read some values, If you have the only the config element that maps to that object
-      val anotherAnalyticsConfig = config.getConfig("services.analytics").as[ServiceConfig]()
+      val anotherAnalyticsConfig = config.getConfig("services.analytics").as[ServiceConfig]
 
       anotherAnalyticsConfig must beEqualTo(analyticsConfig)
     }

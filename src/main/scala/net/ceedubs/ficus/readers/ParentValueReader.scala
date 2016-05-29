@@ -11,6 +11,8 @@ import com.typesafe.config.Config
   * [[net.ceedubs.ficus.FicusConfig.as()]] method using that value reader.
   */
 trait ParentValueReader[A] {
+  def value: ValueReader[A]
+
   /**
     * Calls [[read(config, path)]] with a new [[Config]] object constructed
     * from the given config object
@@ -18,9 +20,8 @@ trait ParentValueReader[A] {
     * @param config The config object to read
     * @return       The value read
     */
-  def read(config: Config)(implicit valueReader: ValueReader[A]): A =
-    valueReader.read(config.atKey(ParentValueReader.key), ParentValueReader.key)
-
+  def read(config: Config): A =
+    value.read(config.atKey(ParentValueReader.key), ParentValueReader.key)
 }
 
 object ParentValueReader {

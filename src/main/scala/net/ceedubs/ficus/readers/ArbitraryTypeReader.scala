@@ -63,11 +63,16 @@ class ArbitraryTypeReaderMacros(val c: blackbox.Context) extends ReflectionUtils
   import c.universe._
 
   def parentValueReader[T: c.WeakTypeTag]: c.Expr[ParentValueReader[T]] = {
-    arbitraryTypeValueReader
+    import c.universe._
 
-    reify {
-      new ParentValueReader[T] {}
+    val tpe = weakTypeOf[T]
+
+    c.Expr[ParentValueReader[T]](
+    q"""new _root_.net.ceedubs.ficus.readers.ParentValueReader[$tpe] {
+      val value = _root_.net.ceedubs.ficus.readers.ArbitraryTypeReader.arbitraryTypeValueReader[$tpe]
     }
+    """
+    )
   }
 
   def arbitraryTypeValueReader[T: c.WeakTypeTag]: c.Expr[ValueReader[T]] = {

@@ -9,8 +9,6 @@ trait ConfigReader {
   }
 
   implicit val ficusConfigValueReader: ValueReader[FicusConfig] = configValueReader.map(SimpleFicusConfig)
-
-  implicit val parentConfigValueReader: ParentValueReader[Config] = new ParentValueReader[Config] {}
 }
 
 object ConfigReader extends ConfigReader

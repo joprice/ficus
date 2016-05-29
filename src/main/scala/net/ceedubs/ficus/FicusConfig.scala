@@ -9,7 +9,7 @@ trait FicusConfig {
 
   def config: Config
 
-  def as[A]()(implicit parentReader: ParentValueReader[A], reader: ValueReader[A]): A = parentReader.read(config)
+  def as[A](implicit parentReader: ParentValueReader[A]): A = parentReader.read(config)
 
   def as[A](path: String)(implicit reader: ValueReader[A]): A = reader.read(config, path)
 
